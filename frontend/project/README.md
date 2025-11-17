@@ -5,6 +5,7 @@ AI-driven geospatial malaria outbreak prediction and visualization platform buil
 ## Features
 
 - 🗺️ **Interactive Geospatial Maps** - Leaflet-based map visualization with multiple layer support
+- 🎯 **Mission Filters & Stats** - Date/region filters, proactive alerts, and status cards for field teams
 - 📊 **Risk Prediction Visualization** - Real-time heatmap display of malaria outbreak risk
 - 📈 **Historical Data Charts** - Trend analysis of past outbreak data
 - 🌡️ **Multi-Layer Support** - Temperature, rainfall, humidity, and population density layers
@@ -17,14 +18,20 @@ AI-driven geospatial malaria outbreak prediction and visualization platform buil
 ```
 src/
 ├── components/
-│   ├── MalariaMap.vue      # Interactive map component with Leaflet
-│   ├── LayerControls.vue    # Layer selection controls
-│   ├── RiskSummary.vue      # Risk prediction summary display
-│   └── HistoricalChart.vue  # Historical outbreak trend chart
+│   ├── FiltersPanel.vue      # Date/region filters + refresh
+│   ├── StatCards.vue         # Quick alert/coverage metrics
+│   ├── MalariaMap.vue        # Interactive map (Leaflet)
+│   ├── MapLegend.vue         # Dynamic legend per layer
+│   ├── LayerControls.vue     # Layer selection controls
+│   ├── RiskSummary.vue       # Risk prediction summary display
+│   ├── HistoricalChart.vue   # Historical outbreak trend chart
+│   └── OfflineNotice.vue     # Mock/demo mode banner
+├── data/
+│   └── mockData.js          # Mock responses for frontend-only mode
 ├── services/
-│   └── api.js              # API service layer for backend communication
-├── App.vue                 # Main dashboard component
-└── main.js                # Application entry point
+│   └── api.js               # API service layer with fallback logic
+├── App.vue                  # Main dashboard component
+└── main.js                 # Application entry point
 ```
 
 ## Setup
@@ -41,10 +48,14 @@ src/
 npm install
 ```
 
-2. Configure backend API URL:
-   - Create a `.env` file in the project root
-   - Add: `VUE_APP_API_URL=http://localhost:5000/api`
-   - Update the URL to match your backend server
+2. Configure environment variables (optional for demo mode):
+   - Duplicate `.env.example` → `.env`
+   - Default contents:
+     ```
+     VUE_APP_API_URL=http://localhost:5000/api
+     VUE_APP_USE_MOCKS=true
+     ```
+   - Set `VUE_APP_USE_MOCKS=false` once your backend is ready.
 
 3. Start development server:
 ```bash
@@ -55,7 +66,15 @@ The app will be available at `http://localhost:8080`
 
 ## API Integration
 
-The frontend expects the following backend API endpoints:
+The frontend is API-first but can operate entirely in “demo mode” using local mock data.
+
+### Frontend-only / Mock Mode
+- Enabled when `VUE_APP_USE_MOCKS` is omitted or set to `true`
+- API calls automatically fall back to curated samples inside `src/data/mockData.js`
+- The UI shows a “Demo mode” banner so field teams know data is simulated
+- Ideal for design reviews, usability testing, or environments without network connectivity
+
+### Expected Backend Endpoints
 
 ### Endpoints
 
