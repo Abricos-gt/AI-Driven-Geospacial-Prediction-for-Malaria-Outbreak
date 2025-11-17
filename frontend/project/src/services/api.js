@@ -5,9 +5,17 @@
  */
 
 import axios from 'axios';
+import {
+  mockGeospatialLayers,
+  mockHeatmapData,
+  mockHistoricalData,
+  mockPredictionSummary,
+  mockRiskPrediction,
+} from '@/data/mockData';
 
 // Base API URL - configure based on your backend
 const API_BASE_URL = process.env.VUE_APP_API_URL || 'http://localhost:5000/api';
+const USE_MOCKS = process.env.VUE_APP_USE_MOCKS !== 'false';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -23,12 +31,19 @@ const apiClient = axios.create({
  */
 apiClient.interceptors.request.use(
   (config) => {
+    const updatedConfig = {
+      ...config,
+      headers: {
+        ...config.headers,
+      },
+    };
+
     // Add auth token if available
     const token = localStorage.getItem('authToken');
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      updatedConfig.headers.Authorization = `Bearer ${token}`;
     }
-    return config;
+    return updatedConfig;
   },
   (error) => Promise.reject(error),
 );
@@ -41,14 +56,28 @@ apiClient.interceptors.response.use(
   (error) => {
     // Handle network errors gracefully
     if (!error.response) {
-      return Promise.reject({
-        message: 'Network error. Please check your connection.',
-        isNetworkError: true,
-      });
+      const networkError = new Error('Network error. Please check your connection.');
+      networkError.isNetworkError = true;
+      return Promise.reject(networkError);
     }
     return Promise.reject(error);
   },
 );
+
+const shouldUseMockData = (error) => (
+  USE_MOCKS && (!error || error.isNetworkError || !error.response)
+);
+
+const withMockFallback = async (requestFn, mockFn) => {
+  try {
+    return await requestFn();
+  } catch (error) {
+    if (shouldUseMockData(error)) {
+      return mockFn();
+    }
+    throw error;
+  }
+};
 
 /**
  * API Methods
@@ -59,14 +88,13 @@ apiClient.interceptors.response.use(
  * @param {Object} params - { lat, lng, date, region }
  * @returns {Promise} Prediction data with risk level and confidence
  */
-export const getRiskPrediction = async (params) => {
-  try {
+export const getRiskPrediction = async (params) => withMockFallback(
+  async () => {
     const response = await apiClient.get('/predictions/risk', { params });
     return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
+  },
+  () => mockRiskPrediction(params),
+);
 
 /**
  * Get geospatial layer data (temperature, rainfall, humidity, population)
@@ -75,8 +103,8 @@ export const getRiskPrediction = async (params) => {
  * @param {string} date - ISO date string (optional)
  * @returns {Promise} Geospatial layer data (GeoJSON or tile URL)
  */
-export const getGeospatialLayer = async (layerType, bounds, date = null) => {
-  try {
+export const getGeospatialLayer = async (layerType, bounds, date = null) => withMockFallback(
+  async () => {
     const params = {
       layer: layerType,
       ...bounds,
@@ -84,24 +112,22 @@ export const getGeospatialLayer = async (layerType, bounds, date = null) => {
     if (date) params.date = date;
     const response = await apiClient.get('/layers/geospatial', { params });
     return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
+  },
+  () => mockGeospatialLayers[layerType] || mockGeospatialLayers.temperature,
+);
 
 /**
  * Get historical outbreak data
  * @param {Object} params - { region, startDate, endDate, aggregation }
  * @returns {Promise} Historical outbreak data array
  */
-export const getHistoricalData = async (params) => {
-  try {
+export const getHistoricalData = async (params) => withMockFallback(
+  async () => {
     const response = await apiClient.get('/data/historical', { params });
     return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
+  },
+  () => mockHistoricalData,
+);
 
 /**
  * Get current risk heatmap data for map visualization
@@ -109,30 +135,27 @@ export const getHistoricalData = async (params) => {
  * @param {number} zoom - Map zoom level
  * @returns {Promise} Heatmap data points
  */
-export const getRiskHeatmap = async (bounds, zoom) => {
-  try {
+export const getRiskHeatmap = async (bounds, zoom) => withMockFallback(
+  async () => {
     const response = await apiClient.get('/predictions/heatmap', {
       params: { ...bounds, zoom },
     });
     return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
+  },
+  () => mockHeatmapData,
+);
 
 /**
  * Get prediction statistics and summary
  * @param {Object} params - { region, date }
  * @returns {Promise} Summary statistics
  */
-export const getPredictionSummary = async (params) => {
-  try {
+export const getPredictionSummary = async (params) => withMockFallback(
+  async () => {
     const response = await apiClient.get('/predictions/summary', { params });
     return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
+  },
+  () => mockPredictionSummary,
+);
 
 export default apiClient;
-
