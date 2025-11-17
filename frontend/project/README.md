@@ -1,178 +1,141 @@
-# Malaria Outbreak Prediction Platform - Frontend
+# Malaria Outbreak Prediction Platform — Frontend
 
-AI-driven geospatial malaria outbreak prediction and visualization platform built with Vue 3.
+An AI-assisted geospatial dashboard that equips health responders with real-time insight into malaria risk, whether they’re coordinating from a national command center or deploying in low-bandwidth field sites. Built with Vue 3, Leaflet, and a minimal UI stack for speed, clarity, and resilience.
 
-## Features
+---
 
-- 🗺️ **Interactive Geospatial Maps** - Leaflet-based map visualization with multiple layer support
-- 🎯 **Mission Filters & Stats** - Date/region filters, proactive alerts, and status cards for field teams
-- 📊 **Risk Prediction Visualization** - Real-time heatmap display of malaria outbreak risk
-- 📈 **Historical Data Charts** - Trend analysis of past outbreak data
-- 🌡️ **Multi-Layer Support** - Temperature, rainfall, humidity, and population density layers
-- 📱 **Mobile-First Design** - Optimized for low-resource and mobile environments
-- ♿ **Accessibility** - ARIA labels, keyboard navigation, and screen reader support
-- ⚡ **Lightweight** - Minimal dependencies for fast loading in low-internet regions
+## What Makes This Frontend Different
 
-## Project Structure
+- **Decision-ready intelligence** – Risk heatmaps, factor breakdowns, and historical trends converge in a single, easy-to-scan view.
+- **Field-first experience** – Mobile-friendly layout, large touch targets, dark mode, and graceful offline fallbacks.
+- **Transparent AI outputs** – Layer-specific legends and factor bars explain why a region is flagged as high risk.
+- **Low-bandwidth by design** – Tiny dependency footprint, efficient map rendering, and mock-mode data to keep the UI responsive when networks lag.
+
+---
+
+## System Overview
 
 ```
 src/
+├── App.vue                  # Main dashboard & layout
 ├── components/
-│   ├── FiltersPanel.vue      # Date/region filters + refresh
-│   ├── StatCards.vue         # Quick alert/coverage metrics
-│   ├── MalariaMap.vue        # Interactive map (Leaflet)
-│   ├── MapLegend.vue         # Dynamic legend per layer
-│   ├── LayerControls.vue     # Layer selection controls
-│   ├── RiskSummary.vue       # Risk prediction summary display
-│   ├── HistoricalChart.vue   # Historical outbreak trend chart
-│   └── OfflineNotice.vue     # Mock/demo mode banner
+│   ├── FiltersPanel.vue       # Date/region filters with refresh action
+│   ├── StatCards.vue          # Snapshot of alerts, coverage, monitored sites
+│   ├── MalariaMap.vue         # Leaflet map with risk heatmap + overlays
+│   ├── MapLegend.vue          # Contextual legend per layer
+│   ├── LayerControls.vue      # Quick toggle for risk/environment layers
+│   ├── RiskSummary.vue        # Overall risk, factor contributions, metadata
+│   ├── HistoricalChart.vue    # 7/30/90/365-day outbreak trends
+│   └── OfflineNotice.vue      # Demo-mode banner for offline training
 ├── data/
-│   └── mockData.js          # Mock responses for frontend-only mode
+│   └── mockData.js           # Curated mock payloads for frontend-only mode
 ├── services/
-│   └── api.js               # API service layer with fallback logic
-├── App.vue                  # Main dashboard component
-└── main.js                 # Application entry point
+│   └── api.js                # Axios client + mock fallbacks + timeout handling
+└── main.js                  # Vue bootstrap
 ```
 
-## Setup
+---
 
-### Prerequisites
+## Getting Started
 
-- Node.js (v14 or higher)
+### Requirements
+- Node.js ≥ 14
 - npm or yarn
 
-### Installation
-
-1. Install dependencies:
+### Install & Run
 ```bash
+cd frontend/project
 npm install
-```
-
-2. Configure environment variables (optional for demo mode):
-   - Duplicate `.env.example` → `.env`
-   - Default contents:
-     ```
-     VUE_APP_API_URL=http://localhost:5000/api
-     VUE_APP_USE_MOCKS=true
-     ```
-   - Set `VUE_APP_USE_MOCKS=false` once your backend is ready.
-
-3. Start development server:
-```bash
 npm run serve
 ```
+Dashboard is available at **http://localhost:8080**.
 
-The app will be available at `http://localhost:8080`
+### Environment Variables
+1. Copy `.env.example` → `.env`
+2. Adjust values as needed:
+   ```
+   VUE_APP_API_URL=http://localhost:5000/api
+   VUE_APP_USE_MOCKS=true
+   ```
+3. Leave `VUE_APP_USE_MOCKS=true` to explore the UI with built-in demo data; set it to `false` once your backend is running.
 
-## API Integration
+---
 
-The frontend is API-first but can operate entirely in “demo mode” using local mock data.
+## Operating Modes
 
-### Frontend-only / Mock Mode
-- Enabled when `VUE_APP_USE_MOCKS` is omitted or set to `true`
-- API calls automatically fall back to curated samples inside `src/data/mockData.js`
-- The UI shows a “Demo mode” banner so field teams know data is simulated
-- Ideal for design reviews, usability testing, or environments without network connectivity
+### Demo / Training Mode (default)
+- No backend required — every API call transparently falls back to `src/data/mockData.js`
+- UI surfaces a “Demo mode” banner so teams know data is simulated
+- Perfect for stakeholder demos, UX reviews, and environments with unreliable connectivity
 
-### Expected Backend Endpoints
+### Live Data Mode
+- Point `VUE_APP_API_URL` to your real API
+- Supported endpoints (see `src/services/api.js` for schemas):
+  - `GET /api/predictions/risk` – location-specific risk snapshot (`lat`, `lng`, `date`, `region`)
+  - `GET /api/predictions/heatmap` – risk intensity for current map bounds (`north`, `south`, `east`, `west`, `zoom`)
+  - `GET /api/predictions/summary` – aggregated stats per view/region/date
+  - `GET /api/layers/geospatial` – temperature/rainfall/humidity/population layers
+  - `GET /api/data/historical` – historical outbreaks (`region`, `startDate`, `endDate`, `aggregation`)
 
-### Endpoints
+---
 
-- `GET /api/predictions/risk` - Get risk prediction for a location
-  - Query params: `lat`, `lng`, `date`, `region`
-  
-- `GET /api/predictions/heatmap` - Get heatmap data for map bounds
-  - Query params: `north`, `south`, `east`, `west`, `zoom`
-  
-- `GET /api/predictions/summary` - Get prediction summary
-  - Query params: `date`, `bounds`, `region`
-  
-- `GET /api/layers/geospatial` - Get geospatial layer data
-  - Query params: `layer` (temperature|rainfall|humidity|population), `north`, `south`, `east`, `west`, `date`
-  
-- `GET /api/data/historical` - Get historical outbreak data
-  - Query params: `region`, `startDate`, `endDate`, `aggregation`
+## Feature Deep Dive
 
-### Response Formats
+- **MalariaMap.vue**  
+  Leaflet-powered base map with heatmap circles, selectable regions, fullscreen mode, and instant layer switching.
 
-See `src/services/api.js` for expected response formats. The API service includes error handling and data transformation.
+- **FiltersPanel + StatCards**  
+  Mission controls for forecast date & focus region, with refresh states and quick stats on alerts, community coverage, and data completeness.
 
-## Building for Production
+- **RiskSummary.vue**  
+  Clear risk tier badge, percentage score, contributing factors, affected areas, confidence score, and last-update timestamp.
 
-```bash
-npm run build
-```
+- **HistoricalChart.vue**  
+  CSS-only bar chart (no heavy chart libraries) with rolling totals and averages to highlight acceleration/decline.
 
-The production build will be in the `dist/` directory, optimized and minified for deployment.
+- **MapLegend + OfflineNotice**  
+  Compact legend that adapts to the selected layer and a banner that signals when mock/demo data is in use.
 
-## Key Features Explained
+- **Dark Mode & Accessibility**  
+  Toggle-friendly theme, semantic landmarks, ARIA labels, keyboard focus styles, and reduced-motion support.
 
-### Map Component
-- Uses Leaflet for lightweight mapping
-- Supports multiple base layers (OpenStreetMap by default)
-- Dynamic layer switching (risk, temperature, rainfall, humidity, population)
-- Click-to-query functionality for location-specific predictions
+---
 
-### Layer Controls
-- Simple, accessible button interface
-- Visual indicators for active layer
-- Mobile-responsive grid layout
+## Performance & Reliability Principles
 
-### Risk Summary
-- Overall risk level with color-coded display
-- Risk factor breakdown with progress bars
-- Statistics and metadata display
-- Real-time updates on location click
+- **Minimal dependencies**: Vue 3, Axios, Leaflet — nothing more unless it improves mission-critical UX.
+- **Async/await + timeout**: all calls bubble up meaningful errors and include slow-network safeguards.
+- **LF line endings + ESLint (Airbnb + Vue A11y)** guarantee consistent cross-platform formatting.
+- **Mock data safety net** keeps the interface usable when no backend or internet is available.
 
-### Historical Chart
-- Custom CSS-based bar chart (no heavy charting library)
-- Time period selection (7, 30, 90, 365 days)
-- Summary statistics (total, average, peak cases)
-- Mobile-optimized layout
-
-## Performance Optimizations
-
-- Minimal dependencies (only Leaflet and Axios)
-- Lazy loading of map data based on viewport
-- Debounced API calls to prevent excessive requests
-- Lightweight CSS animations
-- Optimized for low-bandwidth connections
-
-## Browser Support
-
-- Modern browsers (Chrome, Firefox, Safari, Edge)
-- Mobile browsers (iOS Safari, Chrome Mobile)
-- Graceful degradation for older browsers
-
-## Development
-
-### Linting
+Run lint anytime:
 ```bash
 npm run lint
 ```
 
-### Project Configuration
-- Vue CLI configuration: `vue.config.js`
-- Babel configuration: `babel.config.js`
-- ESLint configuration: `.eslintrc.js`
+Build for deployment:
+```bash
+npm run build
+```
+Outputs a production-ready `dist/` directory.
 
-## Notes for Low-Resource Environments
+---
 
-- All map tiles use free OpenStreetMap (no API key required)
-- API calls have 30-second timeout for slow connections
-- Error messages are user-friendly and actionable
-- Loading states provide clear feedback
-- Minimal JavaScript bundle size
+## Roadmap Ideas
 
-## Contributing
+- Integrate authentication/role-based views (HQ vs. field teams)
+- Export map snapshots & PDF briefs for rapid coordination
+- Hook into SMS/WhatsApp alerting once backend is live
+- Support additional layers (vector control coverage, mobility, supply chain)
 
-When adding new features:
-1. Keep dependencies minimal
-2. Ensure mobile responsiveness
-3. Add proper error handling
-4. Include accessibility attributes
-5. Test on slow connections
+---
 
-## License
+## Contribution Guidelines
 
-See main project LICENSE file.
+1. Champion performance: avoid heavy libraries unless indispensable.
+2. Design for the field: test on small screens, touch inputs, and spotty networks.
+3. Double-check accessibility (`npm run lint` catches most issues).
+4. Document any new endpoints, env vars, or user workflows in this README.
+5. Keep mock mode updated so the UI remains demo-ready at all times.
+
+Together we can help frontline teams respond faster, smarter, and more confidently to malaria threats. 💛
