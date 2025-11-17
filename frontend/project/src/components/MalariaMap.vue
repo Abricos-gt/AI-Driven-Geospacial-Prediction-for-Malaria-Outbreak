@@ -38,6 +38,7 @@ import 'leaflet/dist/leaflet.css';
 import { getRiskHeatmap, getGeospatialLayer } from '@/services/api';
 
 // Fix for default marker icons in webpack
+// eslint-disable-next-line no-underscore-dangle
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -68,6 +69,11 @@ export default {
       type: String,
       default: null,
     },
+    // Selected location marker
+    selectedLocation: {
+      type: Object,
+      default: null,
+    },
   },
   emits: ['map-ready', 'location-click', 'bounds-changed'],
   data() {
@@ -85,6 +91,7 @@ export default {
         humidity: null,
         population: null,
       },
+      selectedMarker: null,
     };
   },
   mounted() {
@@ -96,11 +103,17 @@ export default {
     }
   },
   watch: {
-    activeLayer(newLayer) {
-      this.updateActiveLayer(newLayer);
+    activeLayer() {
+      this.updateActiveLayer();
     },
     selectedDate() {
       this.refreshLayerData();
+    },
+    selectedLocation: {
+      immediate: false,
+      handler(newLocation) {
+        this.updateSelectedMarker(newLocation);
+      },
     },
   },
   methods: {
@@ -314,7 +327,7 @@ export default {
     /**
      * Update active layer display
      */
-    async updateActiveLayer(layerType) {
+    async updateActiveLayer() {
       // Remove all layers
       Object.values(this.layers).forEach((layer) => {
         if (layer) this.map.removeLayer(layer);
@@ -359,6 +372,7 @@ export default {
         lat: e.latlng.lat,
         lng: e.latlng.lng,
       });
+      this.updateSelectedMarker(e.latlng);
     },
 
     /**
@@ -384,6 +398,20 @@ export default {
           document.exitFullscreen();
         }
         this.isFullscreen = false;
+      }
+    },
+
+    /**
+     * Update selected location marker
+     */
+    updateSelectedMarker(location) {
+      if (!this.map) return;
+      if (this.selectedMarker) {
+        this.map.removeLayer(this.selectedMarker);
+        this.selectedMarker = null;
+      }
+      if (location?.lat && location?.lng) {
+        this.selectedMarker = L.marker([location.lat, location.lng]).addTo(this.map);
       }
     },
   },
@@ -510,4 +538,3 @@ export default {
   }
 }
 </style>
-
