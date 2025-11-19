@@ -15,6 +15,26 @@
           </button>
         </div>
       </div>
+
+      <nav class="partner-nav" aria-label="Partner registration links">
+        <ul>
+          <li>
+            <button class="partner-link" @click="openRegistration('ngo')">
+              Register NGO
+            </button>
+          </li>
+          <li>
+            <button class="partner-link" @click="openRegistration('health-agency')">
+              Register Health Agency
+            </button>
+          </li>
+          <li>
+            <button class="partner-link" @click="openRegistration('field-team')">
+              Register Field Team
+            </button>
+          </li>
+        </ul>
+      </nav>
     </header>
 
     <main class="app-main">
@@ -336,6 +356,18 @@ export default {
     openExport() {
       console.info('Snapshot export will be available once backend storage is connected.');
     },
+
+    openRegistration(partnerType) {
+      const baseUrl = 'https://forms.gle/placeholder-registration';
+      const partnerLabels = {
+        ngo: 'NGO',
+        'health-agency': 'Health Agency',
+        'field-team': 'Field Team',
+      };
+      const label = partnerLabels[partnerType] || 'Partner';
+      window.open(`${baseUrl}?type=${encodeURIComponent(partnerType)}`, '_blank');
+      console.info(`${label} registration link opened.`);
+    },
   },
 };
 </script>
@@ -381,7 +413,7 @@ body {
 .app-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 1.5rem 1rem;
+  padding: 1.5rem 1rem 0.75rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -393,6 +425,46 @@ body {
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
+}
+
+.partner-nav {
+  max-width: 1440px;
+  margin: 0.5rem auto 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.partner-nav ul {
+  list-style: none;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.partner-nav li {
+  margin: 0;
+}
+
+.partner-link {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  letter-spacing: 0.01em;
+  transition:
+    background 0.2s,
+    transform 0.2s,
+    opacity 0.2s;
+}
+
+.partner-link:hover {
+  background: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
+  opacity: 0.95;
 }
 
 .app-title {
@@ -548,6 +620,16 @@ body.theme-dark .field-tip-card {
   .map-section {
     min-height: 400px;
     order: -1;
+  }
+
+  .partner-nav ul {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .partner-link {
+    width: 100%;
+    text-align: center;
   }
 }
 
